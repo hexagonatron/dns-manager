@@ -1,0 +1,12 @@
+version: "3.3"
+services:
+        dnsmasq:
+                restart: always
+                build: .
+                ports:
+                        - "54:54/udp"
+                        - "5300:5300"
+                volumes:
+                        - ./config/dnsmasq.conf:/etc/dnsmasq.conf
+                cap_add:
+                        - NET_ADMIN

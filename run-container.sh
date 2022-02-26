@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/bin/sh
 
-/bin/node /usr/src/dns-manager/server.js & dnsmasq -k &
+dnsmasq -qk --log-debug & node /usr/src/dns-manager/server.js
 
 wait -n
 

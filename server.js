@@ -41,11 +41,19 @@ const addHost = (host) => {
 }
 
 const reloadHosts = () => {
-    exec('');
+    exec('pkill -1 dnsmasq');
 }
 
 app.use(express.json());
 
+app.get("/health",(req, res) => {
+	res.json({status: "OK"})
+})
+
+app.get("/reload",(req, res) => {
+	reloadHosts();
+	res.json({status: "OK"})
+})
 app.use((req, res, next) => {
     const cert = req.socket.getPeerCertificate();
     if (!req.client.authorized) {

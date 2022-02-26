@@ -1,9 +1,10 @@
 FROM node:17-alpine
 
-RUN apk upgrade --no-cache && \
+RUN apk upgrade & \
     apk add dnsmasq 
 
-COPY config/dnsmasq.conf /etc/dnsmasq.conf 
+# COPY config/dnsmasq.conf /etc/dnsmasq.conf 
+RUN echo "port=54">> /etc/dnsmasq.conf
 
 WORKDIR /usr/src/dns-manager
 
@@ -13,10 +14,6 @@ RUN npm install
 
 COPY . .
 
-EXPOSE 5300
-EXPOSE 53/tcp
-EXPOSE 53/udp
-EXPOSE 5353/tcp
-EXPOSE 5353/udp
+EXPOSE 5300 53/tcp 53/udp
 
 CMD ./run-container.sh
