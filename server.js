@@ -5,6 +5,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import https from 'https';
 
+const CUSTOM_HOSTS_PATH = process.env.CUSTOM_HOSTS_PATH;
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
@@ -13,12 +15,13 @@ const IP_REGEX = /[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/;
 const HOST_REGEX = /^[a-zA-Z0-9\.]*$/;
 
 const readExistingHostsRaw = () => {
-    return fs.readFileSync('./hosts', 'utf-8');
-}
+    return fs.readFileSync(CUSTOM_HOSTS_PATH, 'utf-8');
+};
 
 const readExistingHosts = () => {
     try {
         const hosts = readExistingHostsRaw();
+        if (!hosts) return [];
         const hostsList = hosts.split('\n').map(entry => {
             const tuple = entry.split(' ');
             return { ip: tuple[0], host: tuple[1] };
@@ -26,46 +29,46 @@ const readExistingHosts = () => {
         return hostsList;
     } catch (err) {
         console.log(err);
-    }
-}
+    };
+};
 
 const writeHosts = (hostList) => {
     const formattedHosts = hostList.map(hostEntry => `${hostEntry.ip} ${hostEntry.host}`).join('\n');
-    fs.writeFileSync('./hosts', formattedHosts, 'utf8')
-}
+    fs.writeFileSync(CUSTOM_HOSTS_PATH, formattedHosts, 'utf8')
+};
 
 const addHost = (host) => {
     const hosts = readExistingHosts().filter(existingHost => existingHost.host != host.host);
     hosts.push(host);
     writeHosts(hosts);
-}
+};
 
 const reloadHosts = () => {
     exec('pkill -1 dnsmasq');
-}
+};
 
 app.use(express.json());
 
 app.get("/health",(req, res) => {
 	res.json({status: "OK"})
-})
+});
+
+app.use((req, res, next) => {
+    if (!req.client.authorized) {
+        return res.status(401).json({errot: 'Not authorized'});
+    }
+    return next();
+});
 
 app.get("/reload",(req, res) => {
 	reloadHosts();
 	res.json({status: "OK"})
-})
-app.use((req, res, next) => {
-    const cert = req.socket.getPeerCertificate();
-    if (!req.client.authorized) {
-        return res.status(401).json('Not authorized');
-    }
-    return next();
-})
+});
 
 app.get("/", (req, res) => {
     const hosts = readExistingHostsRaw().replace('\r\n', `</br>`);
     res.send(`<pre>${hosts}</pre>`);
-})
+});
 
 app.post("/", (req, res) => {
     console.log(req.body);
