@@ -12,4 +12,4 @@ services:
     cap_add:
       - NET_ADMIN
     environment:
-      - CUSTOM_HOSTS_PATH="/etc/custom_hosts"
+      - CUSTOM_HOSTS_PATH=/etc/custom_hosts
