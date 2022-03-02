@@ -43,26 +43,36 @@ const addHost = (host) => {
     writeHosts(hosts);
 };
 
+const removeHost = (hostName) => {
+    const existingHosts = readExistingHosts()
+    const newHosts = existingHosts.filter(existingHost => existingHost.host != hostName);
+    if (existingHosts.length === newHosts.length) {
+        return false;
+    }
+    writeHosts(hosts);
+    return true;
+};
+
 const reloadHosts = () => {
     exec('pkill -1 dnsmasq');
 };
 
 app.use(express.json());
 
-app.get("/health",(req, res) => {
-	res.json({status: "OK"})
+app.get("/health", (req, res) => {
+    res.json({ status: "OK" })
 });
 
 app.use((req, res, next) => {
     if (!req.client.authorized) {
-        return res.status(401).json({errot: 'Not authorized'});
+        return res.status(401).json({ errot: 'Not authorized' });
     }
     return next();
 });
 
-app.get("/reload",(req, res) => {
-	reloadHosts();
-	res.json({status: "OK"})
+app.get("/reload", (req, res) => {
+    reloadHosts();
+    res.json({ status: "OK" })
 });
 
 app.get("/", (req, res) => {
@@ -82,6 +92,14 @@ app.post("/", (req, res) => {
     addHost({ host, ip });
     reloadHosts();
     return res.json({ pass: validHost && validIp });
+});
+
+app.delete("/:hostName", (req, res) => {
+    const { hostName } = req.params;
+    if (!hostName) return res.status(400).json({ error: "Invalid hostname supplied" });
+    if (!removeHost(hostName)) return res.status(401).json({ error: "No host found" });
+    reloadHosts();
+    return res.status(200).json({ status: "Host deleted" });
 });
 
 const httpserver = https.createServer({
