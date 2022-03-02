@@ -49,7 +49,7 @@ const removeHost = (hostName) => {
     if (existingHosts.length === newHosts.length) {
         return false;
     }
-    writeHosts(hosts);
+    writeHosts(newHosts);
     return true;
 };
 
